@@ -1,4 +1,4 @@
-package com.example.appmusicmvvm
+package com.example.appmusicmvvm.View
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -10,10 +10,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.appmusicmvvm.Adapter.SearchListAdapter
-import com.example.appmusicmvvm.Model.MySong
 import com.example.appmusicmvvm.Retrofit.IRetrofit
 import com.example.appmusicmvvm.Model.SongSearch
+import com.example.appmusicmvvm.R
 import com.example.appmusicmvvm.Retrofit.MyRetrofit
+import com.example.appmusicmvvm.ViewModel.MainViewModel
 import kotlinx.android.synthetic.main.fragment_search.*
 
 class SearchFragment : Fragment() {
@@ -50,16 +51,7 @@ class SearchFragment : Fragment() {
         val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
         var adapter = SearchListAdapter(listSearch)
         adapter.setCallBack {
-            val song = listSearch[it]
-            val id = song.id
-            val title = song.name
-            var artist: String = song.artist
-            var displayName = "${song.name} - ${song.artist}"
-            var data = "http://api.mp3.zing.vn/api/streaming/audio/${song.id}/128"
-            var duration: Long = (song.duration * 1000).toLong()
-            val urlThumb = "https://photo-zmp3.zadn.vn/"
-            var mySong = MySong(id,title,artist,displayName,data,duration,"$urlThumb${song.thumb}",true)
-            mMainViewModel!!.startSong(activity,mySong)
+            mMainViewModel!!.startSearchSong(activity,listSearch[it])
         }
         search_rvSearch.layoutManager = layoutManager
         search_rvSearch.adapter = adapter
@@ -73,6 +65,11 @@ class SearchFragment : Fragment() {
             adapter.listSong = it
             adapter.notifyDataSetChanged()
             search_progressBar.visibility = View.GONE
+        })
+        mMainViewModel!!.isLoad.observe(viewLifecycleOwner, Observer {
+            if(!it){
+                search_progressBar.visibility = View.GONE
+            }
         })
     }
 }

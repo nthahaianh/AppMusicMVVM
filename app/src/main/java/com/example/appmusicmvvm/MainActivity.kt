@@ -17,13 +17,14 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
+import com.example.appmusicmvvm.View.SongActivity
 import com.example.appmusicmvvm.Service.SongService
+import com.example.appmusicmvvm.ViewModel.MainViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
-
     companion object {
-        var mMainViewModel:MainViewModel?=null
+        var mMainViewModel: MainViewModel?=null
     }
     private val REQUEST_CODE_PERMISSIONS = 1
     lateinit var navHostFragment: NavHostFragment
@@ -73,7 +74,8 @@ class MainActivity : AppCompatActivity() {
         mMainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mMainViewModel!!.registerReceiver(this)
         mMainViewModel!!.loadSongs(contentResolver)
-        mMainViewModel!!.getCharts(this)
+//        mMainViewModel!!.getCharts(this)
+        mMainViewModel!!.getFavourite(baseContext)
         mMainViewModel!!.strTitleSong.observe(this, Observer{
             main_tvTitle.text = it.toString()
         })
@@ -92,7 +94,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
         main_tvTitle.setOnClickListener {
-            val intent = Intent(this,SongActivity::class.java)
+            val intent = Intent(this, SongActivity::class.java)
             startActivity(intent)
         }
         main_btnPlay.setOnClickListener {
@@ -134,6 +136,7 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(this, "Please allow storage permission", Toast.LENGTH_SHORT)
                             .show()
                     } else {
+                        mMainViewModel!!.loadSongs(contentResolver)
                     }
                 }
             }

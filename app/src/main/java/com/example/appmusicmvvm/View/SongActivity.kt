@@ -1,4 +1,4 @@
-package com.example.appmusicmvvm
+package com.example.appmusicmvvm.View
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
@@ -19,40 +18,29 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.appmusicmvvm.Adapter.SongAdapter
 import com.example.appmusicmvvm.MainActivity.Companion.mMainViewModel
-import com.example.appmusicmvvm.Model.MySong
 import com.example.appmusicmvvm.Model.Song
-import com.example.appmusicmvvm.Retrofit.IRetrofit
-import com.example.appmusicmvvm.Retrofit.MyRetrofit
-import com.example.appmusicmvvm.SQLite.SQLHelper
-import com.example.appmusicmvvm.Service.SongService.Companion.currentSong
+import com.example.appmusicmvvm.R
 import kotlinx.android.synthetic.main.activity_song.*
 
 class SongActivity : AppCompatActivity() {
     lateinit var sharedPreferences: SharedPreferences
-    lateinit var iRetrofit: IRetrofit
-    lateinit var sqlHelper: SQLHelper
     var listRecommend: MutableList<Song> = mutableListOf()
     var typeRepeat: Int = 0
     var isShuffle = false
-    var isFavourite = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_song)
-
-        sqlHelper = SQLHelper(baseContext)
-        iRetrofit = MyRetrofit.getRetrofit().create(IRetrofit::class.java)
         sharedPreferences = getSharedPreferences("SharePreferences", Context.MODE_PRIVATE)
         typeRepeat = sharedPreferences.getInt("typeRepeat", 0)
         isShuffle = sharedPreferences.getBoolean("isShuffle", false)
-
         updateIconRepeat()
         updateIconShuffle()
-        updateIconFavourite()
         setUpBtnPlay()
         setUpRecommend()
         setUpSeekBar()
-
+        setUpFavourite()
+        setUpProgressBar()
         mMainViewModel!!.nowSong.observe(this, Observer { song ->
             song_tvTitle.text = song.title
             song_tvSinger.text = song.artist
@@ -81,32 +69,11 @@ class SongActivity : AppCompatActivity() {
             val totalDuration = song.duration
             song_tvMaxTime.text = millionSecondsToTime(totalDuration)
             song_seekBar.max = totalDuration.toInt()
+            mMainViewModel!!.checkFavourite(baseContext)
         })
 
-        try {
-            isFavourite = sqlHelper.isExists(currentSong.id)
-            updateIconFavourite()
-        } catch (e: Exception) {
-            e.stackTrace
-        }
         song_ivBack.setOnClickListener {
             finish()
-        }
-        song_ivFavourite.setOnClickListener {
-            try {
-                if (isFavourite) {
-                    sqlHelper.removeSong(currentSong.id)
-                    Log.e("song-ivFa", "remove sql")
-                } else {
-                    sqlHelper.addSong(currentSong)
-                    Log.e("song-ivFa", "add sql ")
-                }
-
-            } catch (e: Exception) {
-                e.stackTrace
-            }
-            isFavourite = !isFavourite
-            updateIconFavourite()
         }
         song_ivShuffle.setOnClickListener {
             isShuffle = !isShuffle
@@ -118,6 +85,13 @@ class SongActivity : AppCompatActivity() {
                 else -> typeRepeat++
             }
             updateIconRepeat()
+        }
+        song_ivFavourite.setOnClickListener {
+            if (mMainViewModel!!.isFavourite.value == true) {
+                mMainViewModel!!.removeFavourite(baseContext)
+            } else {
+                mMainViewModel!!.addFavourite(baseContext)
+            }
         }
         song_btnPlay.setOnClickListener {
             if (mMainViewModel!!.isSongPlay.value == true) {
@@ -134,13 +108,33 @@ class SongActivity : AppCompatActivity() {
         }
     }
 
+    private fun setUpProgressBar() {
+        mMainViewModel!!.isLoad.observe(this, Observer {
+            if (it) {
+                song_progressBar.visibility = View.VISIBLE
+            } else {
+                song_progressBar.visibility = View.GONE
+            }
+        })
+    }
+
+    private fun setUpFavourite() {
+        mMainViewModel!!.isFavourite.observe(this, Observer {
+            if (it) {
+                song_ivFavourite.setImageResource(R.drawable.ic_baseline_favorite_24)
+            } else {
+                song_ivFavourite.setImageResource(R.drawable.ic_not_favorite)
+            }
+        })
+    }
+
     private fun setUpSeekBar() {
         val handler = Handler(Looper.getMainLooper())
         val runnable = object : Runnable {
             override fun run() {
                 mMainViewModel!!.currentPos().observe(this@SongActivity, Observer {
-                    song_tvCurrentTime?.text = intToTime(it)
-                    song_seekBar?.progress = it
+                    song_tvCurrentTime.text = intToTime(it)
+                    song_seekBar.progress = it
                 })
                 handler.postDelayed(this, 1000)
             }
@@ -160,21 +154,10 @@ class SongActivity : AppCompatActivity() {
     }
 
     private fun setUpRecommend() {
-        val layoutManager: RecyclerView.LayoutManager =
-            LinearLayoutManager(baseContext, LinearLayoutManager.VERTICAL, false)
+        val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(baseContext, LinearLayoutManager.VERTICAL, false)
         var adapter = SongAdapter(listRecommend)
         adapter.setCallBack {
-            song_progressBar.visibility = View.VISIBLE
-            val song = listRecommend[it]
-            val id = song.id
-            val title = song.title
-            var artist: String = song.artists_names
-            var displayName = "${song.title} - ${artist}"
-            var data = "http://api.mp3.zing.vn/api/streaming/audio/${song.id}/128"
-            var duration: Long = (song.duration * 1000).toLong()
-            var mySong = MySong(id, title, artist, displayName, data, duration, song.thumbnail, true)
-            currentSong = mySong
-            mMainViewModel!!.startSong(this, mySong)
+            mMainViewModel!!.startSong(this,listRecommend[it])
         }
         song_rvRecommend.layoutManager = layoutManager
         song_rvRecommend.adapter = adapter
@@ -182,7 +165,6 @@ class SongActivity : AppCompatActivity() {
             listRecommend = it
             adapter.listSong = it
             adapter.notifyDataSetChanged()
-            song_progressBar.visibility = View.GONE
         })
     }
 
@@ -222,14 +204,6 @@ class SongActivity : AppCompatActivity() {
         val editor = sharedPreferences.edit()
         editor.putBoolean("isShuffle", isShuffle)
         editor.apply()
-    }
-
-    private fun updateIconFavourite() {
-        if (isFavourite) {
-            song_ivFavourite.setImageResource(R.drawable.ic_baseline_favorite_24)
-        } else {
-            song_ivFavourite.setImageResource(R.drawable.ic_not_favorite)
-        }
     }
 
     fun millionSecondsToTime(milliSeconds: Long): String {

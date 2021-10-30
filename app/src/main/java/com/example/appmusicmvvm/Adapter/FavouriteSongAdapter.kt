@@ -14,7 +14,7 @@ import com.bumptech.glide.Glide
 import com.example.appmusicmvvm.Model.MySong
 import com.example.appmusicmvvm.R
 
-class FavouriteSongAdapter(val context: Context?, val listSong: MutableList<MySong>) :
+class FavouriteSongAdapter(val context: Context?, var listSong: MutableList<MySong>) :
     RecyclerView.Adapter<FavouriteSongAdapter.ViewHolder>() {
     lateinit var view: View
     lateinit var itemClick: (position: Int) -> Unit

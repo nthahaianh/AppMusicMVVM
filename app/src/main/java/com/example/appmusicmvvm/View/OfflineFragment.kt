@@ -1,4 +1,4 @@
-package com.example.appmusicmvvm
+package com.example.appmusicmvvm.View
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.appmusicmvvm.Adapter.MySongAdapter
 import com.example.appmusicmvvm.Model.MySong
+import com.example.appmusicmvvm.R
+import com.example.appmusicmvvm.ViewModel.MainViewModel
 import kotlinx.android.synthetic.main.fragment_offline.*
 
 class OfflineFragment: Fragment() {

@@ -19,7 +19,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppMusicMVVM">
-        <activity android:name=".SongActivity"
+        <activity android:name=".View.SongActivity"
             android:launchMode="singleTask"></activity>
 
         <receiver android:name=".Receiver.SongReceiver" />

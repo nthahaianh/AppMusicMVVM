@@ -28,6 +28,7 @@ import com.example.appmusicmvvm.Model.ResultRecommend
 import com.example.appmusicmvvm.Model.Song
 import com.example.appmusicmvvm.R
 import com.example.appmusicmvvm.Retrofit.MyRetrofit
+import com.example.appmusicmvvm.SQLite.SQLHelper
 import kotlinx.android.synthetic.main.activity_main.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -212,7 +213,7 @@ class SongService : Service() {
         }
     }
 
-    fun startSongPrevious() {
+    fun startSongPrevious() { // don't add historyList
         try {
             if (mediaPlayer.isPlaying) {
                 mediaPlayer.release()
@@ -280,7 +281,6 @@ class SongService : Service() {
                             }
                         }
                     }
-
                     override fun onFailure(call: Call<ResultRecommend>, t: Throwable) {
                         Log.e("Service", "Recommend error")
                     }
@@ -387,25 +387,14 @@ class SongService : Service() {
         }
         if (isPlaying) {
             remoteViews.setImageViewResource(R.id.notification_btnPlay, R.drawable.ic_pause)
-            remoteViews.setOnClickPendingIntent(R.id.notification_btnPlay, getPendingIntent(this,
-                ON_PAUSE
-            ))
+            remoteViews.setOnClickPendingIntent(R.id.notification_btnPlay, getPendingIntent(this,ON_PAUSE))
         } else {
             remoteViews.setImageViewResource(R.id.notification_btnPlay, R.drawable.ic_play_arrow)
-            remoteViews.setOnClickPendingIntent(R.id.notification_btnPlay, getPendingIntent(this,
-                ON_RESUME
-            ))
+            remoteViews.setOnClickPendingIntent(R.id.notification_btnPlay, getPendingIntent(this,ON_RESUME))
         }
-        remoteViews.setOnClickPendingIntent(R.id.notification_btnNext_song, getPendingIntent(this,
-            ON_NEXT
-        ))
-        remoteViews.setOnClickPendingIntent(R.id.notification_btnPrevious_song, getPendingIntent(this,
-            ON_PREVIOUS
-        ))
-        remoteViews.setOnClickPendingIntent(R.id.notification_btnClose, getPendingIntent(this,
-            ON_STOP
-        ))
-
+        remoteViews.setOnClickPendingIntent(R.id.notification_btnNext_song, getPendingIntent(this,ON_NEXT))
+        remoteViews.setOnClickPendingIntent(R.id.notification_btnPrevious_song, getPendingIntent(this,ON_PREVIOUS))
+        remoteViews.setOnClickPendingIntent(R.id.notification_btnClose, getPendingIntent(this,ON_STOP))
         var intent = Intent(this, MainActivity::class.java)
         isDisplay = true
         var pendingIntent = PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT)
@@ -467,6 +456,7 @@ class SongService : Service() {
         }
         return false
     }
+
     private fun loadSongs() {
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
         val projection = arrayOf(
