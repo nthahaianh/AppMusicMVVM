@@ -31,7 +31,6 @@ class MainViewModel : ViewModel() {
     var isSongPlay: MutableLiveData<Boolean> = MutableLiveData()
     var isFavourite: MutableLiveData<Boolean> = MutableLiveData()
     var isLoad: MutableLiveData<Boolean> = MutableLiveData()
-    var songs: MutableList<MySong> = mutableListOf()
     var strTitleSong = MutableLiveData<String>()
     var vmListOffline: MutableLiveData<MutableList<MySong>> = MutableLiveData()
     var vmFavouriteList: MutableLiveData<MutableList<MySong>> = MutableLiveData()
@@ -45,7 +44,7 @@ class MainViewModel : ViewModel() {
         vmListSearch.value = mutableListOf()
         vmListRecommend.value = mutableListOf()
         vmFavouriteList.value = mutableListOf()
-        vmListOffline.value = songs
+        vmListOffline.value = mutableListOf()
         hasInternet.value = false
         displayBottomBar.value = false
         isFavourite.value = false
@@ -277,7 +276,8 @@ class MainViewModel : ViewModel() {
         return false
     }
 
-    fun loadSongs(contentResolver: ContentResolver?): MutableList<MySong> {
+    fun loadSongs(contentResolver: ContentResolver?){
+        var songs: MutableList<MySong> = mutableListOf()
         val selection = MediaStore.Audio.Media.IS_MUSIC + " != 0"
         val projection = arrayOf(
                 MediaStore.Audio.Media._ID,
@@ -311,6 +311,5 @@ class MainViewModel : ViewModel() {
             }
         }
         vmListOffline.value = songs
-        return songs
     }
 }

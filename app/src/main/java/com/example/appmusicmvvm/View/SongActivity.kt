@@ -20,11 +20,11 @@ import com.example.appmusicmvvm.Adapter.SongAdapter
 import com.example.appmusicmvvm.MainActivity.Companion.mMainViewModel
 import com.example.appmusicmvvm.Model.Song
 import com.example.appmusicmvvm.R
+import com.example.appmusicmvvm.Service.SongService.Companion.listRecommend
 import kotlinx.android.synthetic.main.activity_song.*
 
 class SongActivity : AppCompatActivity() {
     lateinit var sharedPreferences: SharedPreferences
-    var listRecommend: MutableList<Song> = mutableListOf()
     var typeRepeat: Int = 0
     var isShuffle = false
 
@@ -132,10 +132,12 @@ class SongActivity : AppCompatActivity() {
         val handler = Handler(Looper.getMainLooper())
         val runnable = object : Runnable {
             override fun run() {
-                mMainViewModel!!.currentPos().observe(this@SongActivity, Observer {
-                    song_tvCurrentTime.text = intToTime(it)
-                    song_seekBar.progress = it
-                })
+//                mMainViewModel!!.currentPos().observe(this@SongActivity, Observer {
+//                    song_tvCurrentTime.text = intToTime(it)
+//                    song_seekBar.progress = it
+//                })
+                song_tvCurrentTime.text = mMainViewModel!!.currentPos().value?.let { intToTime(it) }
+                song_seekBar.progress = mMainViewModel!!.currentPos().value!!
                 handler.postDelayed(this, 1000)
             }
         }
@@ -155,16 +157,15 @@ class SongActivity : AppCompatActivity() {
 
     private fun setUpRecommend() {
         val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(baseContext, LinearLayoutManager.VERTICAL, false)
-        var adapter = SongAdapter(listRecommend)
-        adapter.setCallBack {
-            mMainViewModel!!.startSong(this,listRecommend[it])
+        var adapter = mMainViewModel!!.vmListRecommend.value?.let { SongAdapter(it) }
+        adapter?.setCallBack {
+            mMainViewModel!!.vmListRecommend.value?.get(it)?.let { it1 -> mMainViewModel!!.startSong(this, it1) }
         }
         song_rvRecommend.layoutManager = layoutManager
         song_rvRecommend.adapter = adapter
         mMainViewModel!!.vmListRecommend.observe(this, Observer {
-            listRecommend = it
-            adapter.listSong = it
-            adapter.notifyDataSetChanged()
+            adapter?.listSong = it
+            adapter?.notifyDataSetChanged()
         })
     }
 

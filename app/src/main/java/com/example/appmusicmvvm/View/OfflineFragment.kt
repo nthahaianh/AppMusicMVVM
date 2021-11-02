@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.fragment_offline.*
 
 class OfflineFragment: Fragment() {
     var mMainViewModel: MainViewModel?=null
-    var songs: MutableList<MySong> = mutableListOf()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -32,16 +32,15 @@ class OfflineFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val layoutManager: RecyclerView.LayoutManager =
             LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        var adapter = MySongAdapter(context,songs)
+        var adapter = mMainViewModel!!.vmListOffline.value?.let { MySongAdapter(context, it) }
         offline_rvSongs.layoutManager = layoutManager
         offline_rvSongs.adapter = adapter
-        adapter.setCallBack {
-            mMainViewModel!!.startASong(activity,songs[it])
+        adapter?.setCallBack {
+            mMainViewModel!!.vmListOffline.value?.get(it)?.let { it1 -> mMainViewModel!!.startASong(activity, it1) }
         }
         mMainViewModel!!.vmListOffline.observe(viewLifecycleOwner, Observer {
-            songs = it
-            adapter.listSong=songs
-            adapter.notifyDataSetChanged()
+            adapter?.listSong = it
+            adapter?.notifyDataSetChanged()
         })
     }
 }

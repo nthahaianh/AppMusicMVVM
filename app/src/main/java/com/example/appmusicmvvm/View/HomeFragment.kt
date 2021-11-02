@@ -19,8 +19,6 @@ import kotlinx.android.synthetic.main.fragment_home.*
 
 class HomeFragment : Fragment() {
     var mMainViewModel: MainViewModel?=null
-    lateinit var iRetrofit: IRetrofit
-    var listTopSong: MutableList<Song> = mutableListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,7 +26,6 @@ class HomeFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
-        iRetrofit = MyRetrofit.getRetrofit().create(IRetrofit::class.java)
         mMainViewModel = activity?.let { ViewModelProvider(it).get(MainViewModel::class.java) }
         return view
     }
@@ -53,9 +50,9 @@ class HomeFragment : Fragment() {
 
     private fun setUpChart() {
         val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        var adapter = SongAdapter(listTopSong)
-        adapter.setCallBack {
-            mMainViewModel!!.startSong(activity,listTopSong[it])
+        var adapter = mMainViewModel!!.vmListTop.value?.let { SongAdapter(it) }
+        adapter?.setCallBack {
+            mMainViewModel!!.vmListTop.value?.get(it)?.let { it1 -> mMainViewModel!!.startSong(activity, it1) }
         }
         home_rvCharts?.layoutManager = layoutManager
         home_rvCharts?.adapter = adapter
@@ -65,9 +62,8 @@ class HomeFragment : Fragment() {
             }else{
                 home_progressBar.visibility = View.VISIBLE
             }
-            listTopSong = it
-            adapter.listSong = listTopSong
-            adapter.notifyDataSetChanged()
+            adapter?.listSong = it
+            adapter?.notifyDataSetChanged()
         })
     }
 }

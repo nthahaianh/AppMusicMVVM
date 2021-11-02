@@ -74,11 +74,14 @@ class MainActivity : AppCompatActivity() {
         mMainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mMainViewModel!!.registerReceiver(this)
         mMainViewModel!!.loadSongs(contentResolver)
-//        mMainViewModel!!.getCharts(this)
         mMainViewModel!!.getFavourite(baseContext)
         mMainViewModel!!.strTitleSong.observe(this, Observer{
             main_tvTitle.text = it.toString()
         })
+        main_tvTitle.setOnClickListener {
+            val intent = Intent(this, SongActivity::class.java)
+            startActivity(intent)
+        }
         mMainViewModel!!.displayBottomBar.observe(this, Observer {
             if (it){
                 main_clDisplay.visibility = View.VISIBLE
@@ -93,10 +96,6 @@ class MainActivity : AppCompatActivity() {
                 main_btnPlay.setImageResource(R.drawable.ic_play_arrow)
             }
         })
-        main_tvTitle.setOnClickListener {
-            val intent = Intent(this, SongActivity::class.java)
-            startActivity(intent)
-        }
         main_btnPlay.setOnClickListener {
             if(mMainViewModel!!.isSongPlay.value==true){
                 mMainViewModel!!.pauseSong(this)

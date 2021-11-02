@@ -18,8 +18,6 @@ import kotlinx.android.synthetic.main.fragment_favourite.*
 
 class FavouriteFragment: Fragment() {
     var mMainViewModel: MainViewModel?=null
-    lateinit var sqlHelper: SQLHelper
-    var favouriteList: MutableList<MySong> = mutableListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -27,7 +25,6 @@ class FavouriteFragment: Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_favourite,container,false)
-        sqlHelper = SQLHelper(context)
         mMainViewModel = activity?.let { ViewModelProvider(it).get(MainViewModel::class.java) }
         return view
     }
@@ -35,16 +32,15 @@ class FavouriteFragment: Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        var adapter = FavouriteSongAdapter(context,favouriteList)
-        adapter.setCallBack {
-            mMainViewModel!!.startMySong(activity,favouriteList[it])
+        var adapter = mMainViewModel!!.vmFavouriteList.value?.let { FavouriteSongAdapter(context, it) }
+        adapter?.setCallBack {
+            mMainViewModel!!.vmFavouriteList.value?.get(it)?.let { it1 -> mMainViewModel!!.startMySong(activity, it1) }
         }
         favourite_rvFavourite.layoutManager = layoutManager
         favourite_rvFavourite.adapter = adapter
         mMainViewModel!!.vmFavouriteList.observe(viewLifecycleOwner, Observer {
-            favouriteList = it
-            adapter.listSong = it
-            adapter.notifyDataSetChanged()
+            adapter?.listSong = it
+            adapter?.notifyDataSetChanged()
         })
     }
 }

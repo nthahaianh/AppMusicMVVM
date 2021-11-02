@@ -19,8 +19,6 @@ import kotlinx.android.synthetic.main.fragment_search.*
 
 class SearchFragment : Fragment() {
     var mMainViewModel: MainViewModel?=null
-    lateinit var iSearchRetrofit: IRetrofit
-    var listSearch: MutableList<SongSearch> = mutableListOf()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,7 +26,6 @@ class SearchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_search, container, false)
-        iSearchRetrofit = MyRetrofit.getRetrofitSearch().create(IRetrofit::class.java)
         mMainViewModel = activity?.let { ViewModelProvider(it).get(MainViewModel::class.java) }
         return view
     }
@@ -49,9 +46,9 @@ class SearchFragment : Fragment() {
 
     private fun setUpResult() {
         val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
-        var adapter = SearchListAdapter(listSearch)
-        adapter.setCallBack {
-            mMainViewModel!!.startSearchSong(activity,listSearch[it])
+        var adapter = mMainViewModel!!.vmListSearch.value?.let { SearchListAdapter(it) }
+        adapter?.setCallBack {
+            mMainViewModel!!.vmListSearch.value?.get(it)?.let { it1 -> mMainViewModel!!.startSearchSong(activity, it1) }
         }
         search_rvSearch.layoutManager = layoutManager
         search_rvSearch.adapter = adapter
@@ -61,9 +58,8 @@ class SearchFragment : Fragment() {
             }else{
                 search_tvNoResult.visibility = View.VISIBLE
             }
-            listSearch = it
-            adapter.listSong = it
-            adapter.notifyDataSetChanged()
+            adapter?.listSong = it
+            adapter?.notifyDataSetChanged()
             search_progressBar.visibility = View.GONE
         })
         mMainViewModel!!.isLoad.observe(viewLifecycleOwner, Observer {
